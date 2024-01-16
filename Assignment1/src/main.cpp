@@ -7,13 +7,16 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
 
-    sf::RenderWindow window(sf::VideoMode(800, 600), "My SFML");
+    const int wWidth = 800;
+    const int wHeight = 600;
+    sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "My SFML");
 
     // Rectangle
     sf::Vector2f rSize(250.0f, 100.0f);
     sf::RectangleShape rect(rSize);
     sf::Vector2f rectMoveSpeed(0.1f, 0.05f);
     rect.setFillColor(sf::Color(255, 215, 0));
+    rect.setPosition(100, 100);
 
     // 字体
     sf::Font font;
@@ -35,6 +38,14 @@ int main(int argc, char* argv[]) {
                     rectMoveSpeed *= -1.0f;
                 }
             }
+        }
+
+        if (rect.getGlobalBounds().left <= 0 || rect.getGlobalBounds().left + rect.getSize().x >= wWidth) {
+            rectMoveSpeed.x *= -1.0f;
+        }
+
+        if (rect.getGlobalBounds().top <= 0 || rect.getGlobalBounds().top + rect.getSize().y >= wHeight) {
+            rectMoveSpeed.y *= -1.0f;
         }
 
         rect.setPosition(rect.getPosition().x + rectMoveSpeed.x, rect.getPosition().y + rectMoveSpeed.y);
