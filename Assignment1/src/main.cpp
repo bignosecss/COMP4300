@@ -24,22 +24,24 @@ void loadFromFile(const std::string& filename) {
     // Circle settings
     float radius;
 
-    while (fin >> settingsType) {
-        if (settingsType == "Window") {
-            fin >> winWidth >> winHeight;
-        } else if (settingsType == "Font") {
-            fin >> fontFile >> fontSize >> fontR >> fontG >> fontB;
-        } else if (settingsType == "Rectangle") {
-            fin >> shapeName;
-            fin >> xxPos >> yyPos >> xxVel >> yyVel;
-            fin >> shapeR >> shapeG >> shapeB;
-            fin >> rectWidth >> rectHeight;
-        } else if (settingsType == "Circle") {
-            fin >> shapeName;
-            fin >> xxPos >> yyPos >> xxVel >> yyVel;
-            fin >> shapeR >> shapeG >> shapeB;
-            fin >> radius;
-        }
+    std::string temp;
+    while (fin >> temp) {
+        std::cout << "Hello: " << filename << " " << temp << std::endl;
+        // if (settingsType == "Window") {
+        //     fin >> winWidth >> winHeight;
+        // } else if (settingsType == "Font") {
+        //     fin >> fontFile >> fontSize >> fontR >> fontG >> fontB;
+        // } else if (settingsType == "Rectangle") {
+        //     fin >> shapeName;
+        //     fin >> xxPos >> yyPos >> xxVel >> yyVel;
+        //     fin >> shapeR >> shapeG >> shapeB;
+        //     fin >> rectWidth >> rectHeight;
+        // } else if (settingsType == "Circle") {
+        //     fin >> shapeName;
+        //     fin >> xxPos >> yyPos >> xxVel >> yyVel;
+        //     fin >> shapeR >> shapeG >> shapeB;
+        //     fin >> radius;
+        // }
     }
 }
 
@@ -47,6 +49,7 @@ void loadFromFile(const std::string& filename) {
 int main(int argc, char* argv[]) {
 
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
+    loadFromFile(argv[1]);
 
     const int wWidth = 800;
     const int wHeight = 600;
@@ -58,7 +61,7 @@ int main(int argc, char* argv[]) {
     sf::Vector2f rectMoveSpeed(0.1f, 0.05f);
     rect.setFillColor(sf::Color(255, 215, 0));
     rect.setPosition(100, 100);
-    float accelerate = 2.0f;
+    float accelerate = 1.0f;
 
     // 字体
     sf::Font font;
@@ -84,12 +87,12 @@ int main(int argc, char* argv[]) {
 
         if (rect.getGlobalBounds().left <= 0 || rect.getGlobalBounds().left + rect.getSize().x >= wWidth) {
             rectMoveSpeed.x *= -1.0f;
-            accelerate *= 2.0f;
+            accelerate += 0.01f;
         }
 
         if (rect.getGlobalBounds().top <= 0 || rect.getGlobalBounds().top + rect.getSize().y >= wHeight) {
             rectMoveSpeed.y *= -1.0f;
-            accelerate += 1.0f;
+            accelerate += 0.01f;
         }
 
         rect.setPosition(rect.getPosition().x + rectMoveSpeed.x * accelerate,
