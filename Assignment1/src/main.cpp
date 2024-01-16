@@ -2,6 +2,47 @@
 #include <filesystem>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <fstream>
+
+void loadFromFile(const std::string& filename) {
+    std::ifstream fin(filename);
+
+    std::string settingsType;
+    // Window settings
+    int winWidth, winHeight;
+    // Font settings
+    std::string fontFile;
+    int fontSize;
+    int fontR, fontG, fontB;
+
+    std::string shapeName;
+    float xxPos, yyPos;
+    float xxVel, yyVel;
+    int shapeR, shapeG, shapeB;
+    // Rectangle settings
+    float rectWidth, rectHeight;
+    // Circle settings
+    float radius;
+
+    while (fin >> settingsType) {
+        if (settingsType == "Window") {
+            fin >> winWidth >> winHeight;
+        } else if (settingsType == "Font") {
+            fin >> fontFile >> fontSize >> fontR >> fontG >> fontB;
+        } else if (settingsType == "Rectangle") {
+            fin >> shapeName;
+            fin >> xxPos >> yyPos >> xxVel >> yyVel;
+            fin >> shapeR >> shapeG >> shapeB;
+            fin >> rectWidth >> rectHeight;
+        } else if (settingsType == "Circle") {
+            fin >> shapeName;
+            fin >> xxPos >> yyPos >> xxVel >> yyVel;
+            fin >> shapeR >> shapeG >> shapeB;
+            fin >> radius;
+        }
+    }
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -17,6 +58,7 @@ int main(int argc, char* argv[]) {
     sf::Vector2f rectMoveSpeed(0.1f, 0.05f);
     rect.setFillColor(sf::Color(255, 215, 0));
     rect.setPosition(100, 100);
+    float accelerate = 2.0f;
 
     // 字体
     sf::Font font;
@@ -42,13 +84,16 @@ int main(int argc, char* argv[]) {
 
         if (rect.getGlobalBounds().left <= 0 || rect.getGlobalBounds().left + rect.getSize().x >= wWidth) {
             rectMoveSpeed.x *= -1.0f;
+            accelerate *= 2.0f;
         }
 
         if (rect.getGlobalBounds().top <= 0 || rect.getGlobalBounds().top + rect.getSize().y >= wHeight) {
             rectMoveSpeed.y *= -1.0f;
+            accelerate += 1.0f;
         }
 
-        rect.setPosition(rect.getPosition().x + rectMoveSpeed.x, rect.getPosition().y + rectMoveSpeed.y);
+        rect.setPosition(rect.getPosition().x + rectMoveSpeed.x * accelerate,
+                         rect.getPosition().y + rectMoveSpeed.y * accelerate);
 
         sf::Vector2f centerRect(rect.getPosition().x + rect.getSize().x / 2,
                                 rect.getPosition().y + rect.getSize().y / 2);
