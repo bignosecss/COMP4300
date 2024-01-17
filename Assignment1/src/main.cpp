@@ -4,72 +4,64 @@
 #include <SFML/Graphics.hpp>
 #include <fstream>
 
-void loadFromFile(const std::string& filename) {
-    std::ifstream fin(filename);
-
-    std::string settingsType;
-    // Window settings
-    int winWidth, winHeight;
-    // Font settings
-    std::string fontFile;
-    int fontSize;
-    int fontR, fontG, fontB;
-
-    std::string shapeName;
-    float xxPos, yyPos;
-    float xxVel, yyVel;
-    int shapeR, shapeG, shapeB;
-    // Rectangle settings
-    float rectWidth, rectHeight;
-    // Circle settings
-    float radius;
-
-    std::string temp;
-    while (fin >> temp) {
-        std::cout << "Hello: " << filename << " " << temp << std::endl;
-        // if (settingsType == "Window") {
-        //     fin >> winWidth >> winHeight;
-        // } else if (settingsType == "Font") {
-        //     fin >> fontFile >> fontSize >> fontR >> fontG >> fontB;
-        // } else if (settingsType == "Rectangle") {
-        //     fin >> shapeName;
-        //     fin >> xxPos >> yyPos >> xxVel >> yyVel;
-        //     fin >> shapeR >> shapeG >> shapeB;
-        //     fin >> rectWidth >> rectHeight;
-        // } else if (settingsType == "Circle") {
-        //     fin >> shapeName;
-        //     fin >> xxPos >> yyPos >> xxVel >> yyVel;
-        //     fin >> shapeR >> shapeG >> shapeB;
-        //     fin >> radius;
-        // }
+class MyRectangle {
+public:
+    sf::RectangleShape m_rect;
+    sf::Vector2f       m_position;
+    sf::Vector2f       m_rectMoveSpeed;
+    sf::Vector2f       m_size;
+    MyRectangle(const sf::Vector2f& size, int R, int G, int B)
+        : m_rect(size) {
+        m_rect.setFillColor(sf::Color(R, G, B));
     }
-}
 
+    void setRectPosition(const sf::Vector2f& pos) {
+        m_rect.setPosition(pos);
+    }
+
+    void setRectMoveSpeed(const sf::Vector2f& speed) {
+        m_rectMoveSpeed = speed;
+    }
+
+    // collision detection and update the position
+    void updateRect(const sf::RenderWindow& window) {
+        // 窗口碰撞检测
+        if (m_rect.getGlobalBounds().left <= 0 || 
+            m_rect.getGlobalBounds().left + m_rect.getSize().x > window.getSize().x) {
+            m_rectMoveSpeed.x *= -1.0f;
+        }
+        if (m_rect.getGlobalBounds().top <= 0 ||
+            m_rect.getGlobalBounds().top + m_rect.getSize().y >= window.getSize().y) {
+            m_rectMoveSpeed.y *= -1.0f;
+        }
+        // 更新矩形的位置
+        m_rect.setPosition(m_rect.getPosition() + m_rectMoveSpeed);
+    }
+
+    void drawRect(sf::RenderWindow& window) {
+        window.draw(m_rect);
+    }
+};
 
 int main(int argc, char* argv[]) {
 
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
-    loadFromFile(argv[1]);
 
-    const int wWidth = 800;
-    const int wHeight = 600;
+    const int wWidth = 1280;
+    const int wHeight = 720;
     sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "My SFML");
 
-    // Rectangle
-    sf::Vector2f rSize(250.0f, 100.0f);
-    sf::RectangleShape rect(rSize);
-    sf::Vector2f rectMoveSpeed(0.1f, 0.05f);
-    rect.setFillColor(sf::Color(255, 215, 0));
-    rect.setPosition(100, 100);
-    float accelerate = 1.0f;
+    // two rectangles
+    MyRectangle myRect1(sf::Vector2f(100, 60), 144, 238, 144);
+    myRect1.setRectPosition(sf::Vector2f(100, 60));
+    myRect1.setRectMoveSpeed(sf::Vector2f(1.0f, 0.5f));
+    MyRectangle myRect2(sf::Vector2f(150, 120), 255, 69, 0);
+    myRect2.setRectPosition(sf::Vector2f(300, 200));
+    myRect2.setRectMoveSpeed(sf::Vector2f(-0.5f, -1.0f));
 
-    // 字体
-    sf::Font font;
-    if (!font.loadFromFile("bin/fonts/coffee-shop-bold-small-cap.ttf")) {
-        return -1;
-    }
-    sf::Text text("Hello World!", font, 24);
-    text.setFillColor(sf::Color::Red);
+    std::vector<MyRectangle> myRects;
+    myRects.push_back(myRect1);
+    myRects.push_back(myRect2);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -80,33 +72,26 @@ int main(int argc, char* argv[]) {
             if (event.type == sf::Event::KeyPressed) {
                 std::cout << "Key pressed with code = " << event.key.code << std::endl;
                 if (event.key.code == sf::Keyboard::X) {
-                    rectMoveSpeed *= -1.0f;
+                    // reverse the direction of speed
+                    for (auto& rect : myRects) {
+                        rect.m_rectMoveSpeed *= -1.0f;
+                    }
                 }
             }
         }
 
-        if (rect.getGlobalBounds().left <= 0 || rect.getGlobalBounds().left + rect.getSize().x >= wWidth) {
-            rectMoveSpeed.x *= -1.0f;
-            accelerate += 0.01f;
+        // 更新所有矩形
+        for (auto& rect : myRects) {
+            rect.updateRect(window);
         }
-
-        if (rect.getGlobalBounds().top <= 0 || rect.getGlobalBounds().top + rect.getSize().y >= wHeight) {
-            rectMoveSpeed.y *= -1.0f;
-            accelerate += 0.01f;
-        }
-
-        rect.setPosition(rect.getPosition().x + rectMoveSpeed.x * accelerate,
-                         rect.getPosition().y + rectMoveSpeed.y * accelerate);
-
-        sf::Vector2f centerRect(rect.getPosition().x + rect.getSize().x / 2,
-                                rect.getPosition().y + rect.getSize().y / 2);
-
-        text.setPosition(centerRect.x - text.getGlobalBounds().width / 2, 
-                         centerRect.y - text.getGlobalBounds().height / 2);
 
         window.clear();
-        window.draw(rect);
-        window.draw(text);
+
+        // 画出所有矩形
+        for (auto& rect : myRects) {
+            rect.drawRect(window);
+        }
+
         window.display();
     }
 
