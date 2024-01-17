@@ -9,7 +9,6 @@ public:
     sf::RectangleShape   m_rect;
     sf::CircleShape      m_circle;
     sf::Vector2f         m_speed;
-    std::string          shapeName;
 
     virtual void setPosition(const sf::Vector2f& position) = 0;
     virtual void setMoveSpeed(const sf::Vector2f& speed)  = 0;
@@ -21,6 +20,7 @@ public:
 class MyRectangle : public MyShape {
 public:
     std::vector<std::shared_ptr<MyRectangle>> m_rects;
+    std::vector<std::string>                  m_rectNames;
 
     MyRectangle() {}
 
@@ -62,7 +62,7 @@ public:
 
         std::string settingType;
         // rectangle
-        std::string shapeName;
+        std::string rectName;
         float       xxPos, yyPos;
         float       xxVel, yyVel;
         int         R, G, B;
@@ -70,7 +70,7 @@ public:
 
         while (fin >> settingType) {
             if (settingType == "Rectangle") {
-                fin >> shapeName;
+                fin >> rectName;
                 fin >> xxPos >> yyPos;
                 fin >> xxVel >> yyVel;
                 fin >> R >> G >> B;
@@ -81,8 +81,9 @@ public:
                 rect->setPosition(sf::Vector2f(xxPos, yyPos));
                 rect->setMoveSpeed(sf::Vector2f(xxVel, yyVel));
                 m_rects.push_back(rect);
+                m_rectNames.push_back(rectName);
                 // print all info
-                std::cout << shapeName << " ";
+                std::cout << rectName << " ";
                 std::cout << xxPos << " " << yyPos << " " << xxVel << " " << yyVel << " ";
                 std::cout << R << " " << G << " " << B << " ";
                 std::cout << rectWidth << " " << rectHeight << std::endl;
@@ -93,6 +94,7 @@ public:
 
 class MyCircle : public MyShape {
 public:
+    std::vector<std::string>               m_circleNames;
     sf::Vector2f                           m_circleMoveSpeed;
     std::vector<std::shared_ptr<MyCircle>> m_circles;
 
@@ -134,8 +136,8 @@ public:
         std::ifstream fin(filename);
 
         std::string settingType;
-        // rectangle
-        std::string shapeName;
+        // cirrcle
+        std::string circleName;
         float       xxPos, yyPos;
         float       xxVel, yyVel;
         int         R, G, B;
@@ -143,7 +145,7 @@ public:
 
         while (fin >> settingType) {
             if (settingType == "Circle") {
-                fin >> shapeName;
+                fin >> circleName;
                 fin >> xxPos >> yyPos;
                 fin >> xxVel >> yyVel;
                 fin >> R >> G >> B;
@@ -154,8 +156,9 @@ public:
                 circle->setPosition(sf::Vector2f(xxPos, yyPos));
                 circle->setMoveSpeed(sf::Vector2f(xxVel, yyVel));
                 m_circles.push_back(circle);
+                m_circleNames.push_back(circleName);
                 // print all info
-                std::cout << shapeName << " ";
+                std::cout << circleName << " ";
                 std::cout << xxPos <<  " " << yyPos <<  " " << xxVel <<  " " << yyVel << " ";
                 std::cout << R <<  " " << G <<  " " << B <<  " " << radius << std::endl;
             }
@@ -166,15 +169,39 @@ public:
 int main(int argc, char* argv[]) {
 
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
+    if (argc != 3) {
+        std::cout << "The 1st cmd argument is the path to the DATA file." << std::endl;
+        std::cout << "The 2nd cmd argument is the path to the FONT file." << std::endl;
+        return -1;
+    }
 
     const int wWidth = 800;
     const int wHeight = 600;
     sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "My SFML");
 
+    // all shapes
     MyRectangle rect;
     MyCircle    circle;
     rect.loadFromFile(argv[1]);
     circle.loadFromFile(argv[1]);
+
+    // fonts
+    sf::Font font;
+    if (!font.loadFromFile(argv[2])) {
+        return EXIT_FAILURE;
+    }
+    // rectangle texts
+    std::vector<sf::Text> rectTexts;
+    for (auto& rectName : rect.m_rectNames) {
+        sf::Text text(rectName, font, 14);
+        rectTexts.push_back(text);
+    }
+    // circle texts
+    std::vector<sf::Text> circlrTexts;
+    for (auto& circleName : circle.m_circleNames) {
+        sf::Text text(circleName, font, 14);
+        circlrTexts.push_back(text);
+    }
 
     while (window.isOpen()) {
         sf::Event event;
@@ -205,6 +232,15 @@ int main(int argc, char* argv[]) {
         for (auto& shape : circle.m_circles) {
             shape->update(window);
             shape->draw(window);
+        }
+        // 打印文本
+        for (auto& text : rectTexts) {
+            text.setPosition(std::rand() % 400, std::rand() % 400 - 200);
+            window.draw(text);
+        }
+        for (auto& text : circlrTexts) {
+            text.setPosition(std::rand() % 400 - 200, std::rand() % 400);
+            window.draw(text);
         }
         window.display();
     }
