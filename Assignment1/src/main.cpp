@@ -6,6 +6,10 @@
 
 class MyShape {
 public:
+    sf::RectangleShape m_rect;
+    sf::CircleShape    m_circle;
+    sf::Vector2f       m_speed;
+
     virtual void setPosition(const sf::Vector2f& position) = 0;
     virtual void setMoveSpeed(const sf::Vector2f& speed)  = 0;
     virtual void update(const sf::RenderWindow& window) = 0;
@@ -14,11 +18,9 @@ public:
 
 class MyRectangle : public MyShape {
 public:
-    sf::RectangleShape m_rect;
-    sf::Vector2f       m_rectMoveSpeed;
-
     MyRectangle(const sf::Vector2f& size, int R, int G, int B)
-        : m_rect(size) {
+        : MyShape() {
+        m_rect.setSize(size);
         m_rect.setFillColor(sf::Color(R, G, B));
     }
 
@@ -27,7 +29,7 @@ public:
     }
 
     void setMoveSpeed(const sf::Vector2f& speed) override {
-        m_rectMoveSpeed = speed;
+        m_speed = speed;
     }
 
     // collision detection and update the position
@@ -35,14 +37,14 @@ public:
         // 窗口碰撞检测
         if (m_rect.getGlobalBounds().left <= 0 || 
             m_rect.getGlobalBounds().left + m_rect.getSize().x > window.getSize().x) {
-            m_rectMoveSpeed.x *= -1.0f;
+            m_speed.x *= -1.0f;
         }
         if (m_rect.getGlobalBounds().top <= 0 ||
             m_rect.getGlobalBounds().top + m_rect.getSize().y >= window.getSize().y) {
-            m_rectMoveSpeed.y *= -1.0f;
+            m_speed.y *= -1.0f;
         }
         // 更新矩形的位置
-        m_rect.setPosition(m_rect.getPosition() + m_rectMoveSpeed);
+        m_rect.setPosition(m_rect.getPosition() + m_speed);
     }
 
     void draw(sf::RenderWindow& window) override {
@@ -52,11 +54,11 @@ public:
 
 class MyCircle : public MyShape {
 public:
-    sf::CircleShape m_circle;
     sf::Vector2f m_circleMoveSpeed;
 
     MyCircle(float r, int R, int G, int B)
-        : m_circle(r) {
+        : MyShape() {
+        m_circle.setRadius(r);
         m_circle.setFillColor(sf::Color(R, G, B));
     }
 
@@ -111,18 +113,18 @@ int main(int argc, char* argv[]) {
     myCircle2->setPosition(sf::Vector2f(150, 100));
     myCircle2->setMoveSpeed(sf::Vector2f(-0.5f, -0.75f));
 
-    std::vector<std::shared_ptr<MyRectangle>> myRects;
-    myRects.push_back(myRect1);
-    myRects.push_back(myRect2);
-    std::vector<std::shared_ptr<MyCircle>> myCircles;
-    myCircles.push_back(myCircle1);
-    myCircles.push_back(myCircle2);
+    // std::vector<std::shared_ptr<MyRectangle>> myRects;
+    // myRects.push_back(myRect1);
+    // myRects.push_back(myRect2);
+    // std::vector<std::shared_ptr<MyCircle>> myCircles;
+    // myCircles.push_back(myCircle1);
+    // myCircles.push_back(myCircle2);
 
-    // std::vector<MyShape> shapes;
-    // shapes.push_back(myRect1);
-    // shapes.push_back(myRect2);
-    // shapes.push_back(myCircle1);
-    // shapes.push_back(myCircle2);
+    std::vector<std::shared_ptr<MyShape>> shapes;
+    shapes.push_back(myRect1);
+    shapes.push_back(myRect2);
+    shapes.push_back(myCircle1);
+    shapes.push_back(myCircle2);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -134,31 +136,31 @@ int main(int argc, char* argv[]) {
                 std::cout << "Key pressed with code = " << event.key.code << std::endl;
                 if (event.key.code == sf::Keyboard::X) {
                     // reverse the direction of speed
-                    for (auto& rect : myRects) {
-                        rect->m_rectMoveSpeed *= -1.0f;
+                    for (auto& rect : shapes) {
+                        rect->m_speed *= -1.0f;
                     }
-                    for(auto& circle : myCircles) {
-                        circle->m_circleMoveSpeed *= -1.0f;
+                    for(auto& circle : shapes) {
+                        circle->m_speed *= -1.0f;
                     }
                 }
             }
         }
 
         // 更新所有图形
-        for (auto& rect : myRects) {
+        for (auto& rect : shapes) {
             rect->update(window);
         }
-        for (auto& circle : myCircles) {
+        for (auto& circle : shapes) {
             circle->update(window);
         }
 
         window.clear();
 
         // 画出所有图形
-        for (auto& rect : myRects) {
+        for (auto& rect : shapes) {
             rect->draw(window);
         }
-        for (auto& circle : myCircles) {
+        for (auto& circle : shapes) {
             circle->draw(window);
         }
 
