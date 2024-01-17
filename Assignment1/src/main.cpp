@@ -6,14 +6,49 @@
 
 class MyShape {
 public:
-    sf::RectangleShape m_rect;
-    sf::CircleShape    m_circle;
-    sf::Vector2f       m_speed;
+    sf::RectangleShape   m_rect;
+    sf::CircleShape      m_circle;
+    sf::Vector2f         m_speed;
 
     virtual void setPosition(const sf::Vector2f& position) = 0;
     virtual void setMoveSpeed(const sf::Vector2f& speed)  = 0;
     virtual void update(const sf::RenderWindow& window) = 0;
     virtual void draw(sf::RenderWindow& window) = 0;
+
+    void loadFromFile(const std::string& filename) {
+        std::ifstream fin(filename);
+
+        std::string settingType;
+        // components
+        float       xxPos, yyPos;
+        float       xxVel, yyVel;
+        int         R, G, B;
+        // rectangle
+        float       rectWidth, rectHeight;
+        // circle
+        float       radius;
+
+        while (fin >> settingType) {
+            if (settingType == "Rectangle") {
+                fin >> xxPos >> yyPos;
+                fin >> xxVel >> yyVel;
+                fin >> R >> G >> B;
+                fin >> rectWidth >> rectHeight;
+
+                std::cout << xxPos << " " << yyPos << " " << xxVel << " " << yyVel << " ";
+                std::cout << R << " " << G << " " << B << " ";
+                std::cout << rectWidth << " " << rectHeight << std::endl;
+            } else if (settingType == "Circle") {
+                fin >> xxPos >> yyPos;
+                fin >> xxVel >> yyVel;
+                fin >> R >> G >> B;
+                fin >> radius;
+
+                std::cout << xxPos <<  " " << yyPos <<  " " << xxVel <<  " " << yyVel << " ";
+                std::cout << R <<  " " << G <<  " " << B <<  " " << radius << std::endl;
+            }
+        }
+    }
 };
 
 class MyRectangle : public MyShape {
@@ -113,6 +148,8 @@ int main(int argc, char* argv[]) {
     myCircle2->setPosition(sf::Vector2f(150, 100));
     myCircle2->setMoveSpeed(sf::Vector2f(-0.5f, -0.15f));
 
+    myRect1->loadFromFile(argv[1]);
+
     std::vector<std::shared_ptr<MyShape>> shapes;
     shapes.push_back(myRect1);
     shapes.push_back(myRect2);
@@ -130,31 +167,18 @@ int main(int argc, char* argv[]) {
                 if (event.key.code == sf::Keyboard::X) {
                     // reverse the direction of speed
                     for (auto& shape : shapes) {
-                        shape->m_speed.x *= -1.0f;
-                        shape->m_speed.y *= 1.0f;
+                        shape->m_speed *= -1.0f;
                     }
                 }
             }
         }
 
-        // 更新所有图形
-        for (auto& rect : shapes) {
-            rect->update(window);
-        }
-        for (auto& circle : shapes) {
-            circle->update(window);
-        }
-
         window.clear();
-
-        // 画出所有图形
-        for (auto& rect : shapes) {
-            rect->draw(window);
+        // 更新并画出所有图形
+        for (auto& shape : shapes) {
+            shape->update(window);
+            shape->draw(window);
         }
-        for (auto& circle : shapes) {
-            circle->draw(window);
-        }
-
         window.display();
     }
 
