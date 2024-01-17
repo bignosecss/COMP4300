@@ -67,21 +67,21 @@ public:
     }
 
     void setMoveSpeed(const sf::Vector2f& speed) override {
-        m_circleMoveSpeed = speed;
+        m_speed = speed;
     }
 
     void update(const sf::RenderWindow& window) override {
         // 窗口碰撞检测
         if (m_circle.getGlobalBounds().left <= 0 ||
             m_circle.getGlobalBounds().left + m_circle.getRadius() * 2 >= window.getSize().x) {
-           m_circleMoveSpeed.x *= -1.0f;
+           m_speed.x *= -1.0f;
         }
         if (m_circle.getGlobalBounds().top <= 0 ||
             m_circle.getGlobalBounds().top + m_circle.getRadius() * 2 >= window.getSize().y) {
-           m_circleMoveSpeed.y *= -1.0f;
+           m_speed.y *= -1.0f;
         }
         // 更新圆的位置
-        m_circle.setPosition(m_circle.getPosition() + m_circleMoveSpeed);
+        m_circle.setPosition(m_circle.getPosition() + m_speed);
     }
 
     void draw(sf::RenderWindow& window) override {
@@ -100,25 +100,18 @@ int main(int argc, char* argv[]) {
     // two rectangles
     std::shared_ptr<MyRectangle> myRect1 = std::make_shared<MyRectangle>(sf::Vector2f(100, 60), 144, 238, 144);
     myRect1->setPosition(sf::Vector2f(100, 60));
-    myRect1->setMoveSpeed(sf::Vector2f(1.0f, 0.5f));
+    myRect1->setMoveSpeed(sf::Vector2f(0.1f, 0.05f));
     std::shared_ptr<MyRectangle> myRect2 = std::make_shared<MyRectangle>(sf::Vector2f(150, 120), 255, 69, 0);
     myRect2->setPosition(sf::Vector2f(300, 200));
-    myRect2->setMoveSpeed(sf::Vector2f(-0.5f, -1.0f));
+    myRect2->setMoveSpeed(sf::Vector2f(-0.05f, -0.1f));
 
     // two circles
     std::shared_ptr<MyCircle> myCircle1 = std::make_shared<MyCircle>(20.0f, 255, 0, 0);
     myCircle1->setPosition(sf::Vector2f(200, 200));
-    myCircle1->setMoveSpeed(sf::Vector2f(1.25, 0.75));
+    myCircle1->setMoveSpeed(sf::Vector2f(0.15f, 0.5f));
     std::shared_ptr<MyCircle> myCircle2 = std::make_shared<MyCircle>(30.0f, 255, 215, 0);
     myCircle2->setPosition(sf::Vector2f(150, 100));
-    myCircle2->setMoveSpeed(sf::Vector2f(-0.5f, -0.75f));
-
-    // std::vector<std::shared_ptr<MyRectangle>> myRects;
-    // myRects.push_back(myRect1);
-    // myRects.push_back(myRect2);
-    // std::vector<std::shared_ptr<MyCircle>> myCircles;
-    // myCircles.push_back(myCircle1);
-    // myCircles.push_back(myCircle2);
+    myCircle2->setMoveSpeed(sf::Vector2f(-0.5f, -0.15f));
 
     std::vector<std::shared_ptr<MyShape>> shapes;
     shapes.push_back(myRect1);
@@ -136,11 +129,9 @@ int main(int argc, char* argv[]) {
                 std::cout << "Key pressed with code = " << event.key.code << std::endl;
                 if (event.key.code == sf::Keyboard::X) {
                     // reverse the direction of speed
-                    for (auto& rect : shapes) {
-                        rect->m_speed *= -1.0f;
-                    }
-                    for(auto& circle : shapes) {
-                        circle->m_speed *= -1.0f;
+                    for (auto& shape : shapes) {
+                        shape->m_speed.x *= -1.0f;
+                        shape->m_speed.y *= 1.0f;
                     }
                 }
             }
