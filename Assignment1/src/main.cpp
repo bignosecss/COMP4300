@@ -9,12 +9,38 @@ public:
     sf::RectangleShape   m_rect;
     sf::CircleShape      m_circle;
     sf::Vector2f         m_speed;
+    // window
+    int                  m_wWidth, m_wHeight;
+    // font
+    std::string          m_fontFilePath;
+    int                  m_fontSize;
+    int                  m_fontR, m_fontG, m_fontB;
 
     virtual void setPosition(const sf::Vector2f& position) = 0;
     virtual void setMoveSpeed(const sf::Vector2f& speed)  = 0;
     virtual void update(const sf::RenderWindow& window) = 0;
     virtual void draw(sf::RenderWindow& window) = 0;
     virtual void loadFromFile(const std::string& filename) = 0;
+
+    void loadPreSetting(const std::string& filename) {
+        std::ifstream fin(filename);
+
+        std::string   settingType;
+        std::string   fontFilePath;
+        while (fin >> settingType) {
+            if (settingType == "Window") {
+                fin >> m_wWidth >> m_wHeight;
+
+                std::cout << m_wWidth << " " << m_wHeight << std::endl;
+            } else if (settingType == "Font") {
+                fin >> m_fontFilePath >> m_fontSize;
+                fin >> m_fontR >> m_fontG >> m_fontB;
+
+                std::cout << m_fontFilePath << " " << m_fontSize << " ";
+                std::cout << m_fontR << " " << m_fontG << " " << m_fontB << std::endl;
+            }
+        }
+    }
 };
 
 class MyRectangle : public MyShape {
@@ -169,15 +195,30 @@ public:
 int main(int argc, char* argv[]) {
 
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
-    if (argc != 3) {
+    if (argc != 2) {
         std::cout << "The 1st cmd argument is the path to the DATA file." << std::endl;
         std::cout << "The 2nd cmd argument is the path to the FONT file." << std::endl;
         return -1;
     }
 
-    const int wWidth = 800;
-    const int wHeight = 600;
-    sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "My SFML");
+    // const int wWidth = 800;
+    // const int wHeight = 600;
+    // sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "My SFML");
+
+    // pre settings
+    MyRectangle pre;
+    pre.loadPreSetting(argv[1]);
+    std::cout << "the width and height of window: " << pre.m_wWidth << pre.m_wHeight << std::endl;
+    if (pre.m_wWidth <= 0 || pre.m_wHeight <= 0) {
+        std::cerr << "Error: Invalid window size in data file." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    sf::RenderWindow window(sf::VideoMode(pre.m_wWidth, pre.m_wHeight), "My SFML");
+    sf::Font font;
+    if (!font.loadFromFile("bin/" + pre.m_fontFilePath)) {
+        return -1;
+    }
 
     // all shapes
     MyRectangle rect;
@@ -185,11 +226,6 @@ int main(int argc, char* argv[]) {
     rect.loadFromFile(argv[1]);
     circle.loadFromFile(argv[1]);
 
-    // fonts
-    sf::Font font;
-    if (!font.loadFromFile(argv[2])) {
-        return EXIT_FAILURE;
-    }
     // rectangle texts
     std::vector<sf::Text> rectTexts;
     for (auto& rectName : rect.m_rectNames) {
